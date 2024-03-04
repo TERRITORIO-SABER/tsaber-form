@@ -1,0 +1,17 @@
+POST http://localhost:3000/api/form
+content-type: application/json
+
+{
+    "cpf": "409.420.278-17",
+    "description": "141f23123",
+    "email": "leandro_frederico@hotmail.com",
+    "fullName": "John Teste",
+    "messageTitle": "Teste de campos",
+    "orderNumber": "36345634564",
+    "phone": "(12) 32311-3211",
+    "requestType": "duvida",
+    "subject": "suporte_tecnico",
+    "requestAttachments": "anyfile"
+}
+
+###

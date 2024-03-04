@@ -1,0 +1,13 @@
+html {
+  scroll-behavior: smooth;
+  background: #23282C;
+}
+
+input, textarea, select {
+  background: white !important;
+  color: black !important;
+}
+
+input[type=file] {
+  padding-left: 8rem;
+}
