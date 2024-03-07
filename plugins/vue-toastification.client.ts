@@ -8,7 +8,7 @@ const options: PluginOptions = {
   closeOnClick: true,
   hideProgressBar: true,
   closeButton: false,
-  timeout: 4000
+  timeout: 4000,
 }
 
 export default defineNuxtPlugin((nuxtApp) => {

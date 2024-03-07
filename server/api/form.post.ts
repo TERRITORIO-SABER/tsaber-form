@@ -8,11 +8,8 @@ type FormData = {
   cpf: string
   phone: string
   orderNumber?: string
-  // requestAttachments: {
-  //   name: string
-  // }
-  // fileToken: string
 }
+
 type TicketData = {
   ticket_form_id: string
   subject: string
@@ -55,13 +52,6 @@ export default defineEventHandler(async (event) => {
       id: '23142687375259',
       value: body.orderNumber
     })
-
-  // if (body.fileToken) {
-  //   ticketData.comment = {
-  //     body: body.requestAttachments.name,
-  //     uploads: [body.fileToken]
-  //   }
-  // }
 
   const config = useRuntimeConfig()
   const res = await createZendeskTicket(

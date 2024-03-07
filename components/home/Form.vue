@@ -4,16 +4,7 @@ import type { FormSubmitEvent } from '#ui/types'
 import { cpf } from 'cpf-cnpj-validator'
 import { POSITION, useToast } from 'vue-toastification'
 import { CommonOptions } from 'vue-toastification/dist/types/types'
-// import { useReCaptcha } from 'vue-recaptcha-v3'
 
-// let recaptchaInstance = useReCaptcha()
-// const recaptcha = async () => {
-//   console.log('recaptcha')
-
-//   await recaptchaInstance?.recaptchaLoaded()
-//   const token = await recaptchaInstance?.executeRecaptcha('send_request_form')
-//   return token
-// }
 const toast = useToast()
 const toastOptions: CommonOptions = {
   position: POSITION.TOP_CENTER
@@ -65,10 +56,10 @@ const schema = Joi.object({
     .valid('duvida', 'problema', 'outros')
     .required()
     .messages({
-      'any.required': `Escolha uma opção`
+      '*': `Escolha uma opção`
     }),
   subject: Joi.string().required().messages({
-    'any.required': `Escolha uma opção`
+    '*': `Escolha uma opção`
   }),
   fullName: Joi.string().required().messages({
     '*': `Nome completo não pode ficar em branco`
@@ -82,8 +73,7 @@ const schema = Joi.object({
       return value
     }, 'CPF Validation')
     .messages({
-      'any.required': 'CPF inválido',
-      'string.empty': 'CPF inválido'
+      '*': 'CPF inválido'
     }),
   phone: Joi.string()
     .required()
@@ -108,8 +98,7 @@ const schema = Joi.object({
       return value
     }, 'Phone Validation')
     .messages({
-      'any.required': `Telefone não pode ficar em branco`,
-      'string.empty': 'Telefone não pode ficar em branco'
+      '*': `Insira um telefone válido`
     }),
   orderNumber: Joi.string()
     .allow('', null)
@@ -121,21 +110,22 @@ const schema = Joi.object({
         })
       }
       return value
-    }, 'Order Number Validation'),
-  requestAttachments: Joi.any()
+    }, 'Order Number Validation')
 })
 
-const state = reactive({
-  email: undefined,
-  messageTitle: undefined,
-  description: undefined,
-  requestType: undefined,
-  subject: undefined,
-  fullName: undefined,
-  cpf: undefined,
-  phone: undefined,
-  orderNumber: undefined,
-  requestAttachments: undefined
+const defaultValues = {
+  email: null,
+  messageTitle: null,
+  description: null,
+  requestType: null,
+  subject: null,
+  fullName: null,
+  cpf: null,
+  phone: null,
+  orderNumber: null
+}
+const state = ref({
+  ...defaultValues
 })
 
 let isLoading = ref(false)
@@ -143,38 +133,22 @@ let isLoading = ref(false)
 async function onSubmit(event: FormSubmitEvent<any>) {
   isLoading.value = true
   try {
-    // const token = await recaptcha()
-    // console.log('token', token)
+    const { $recaptcha } = useNuxtApp()
+    // @ts-ignore
+    const token = await $recaptcha.execute('login')
+    if (!token) throw new Error('Recaptcha failed')
 
-    // if (!token) {
-    //   return
-    // }
-    let inputFile: any =[]
-    let tokenRes
-    if (state.requestAttachments) {
-      const formData = new FormData()
-      formData.append('file', inputFile)
-      tokenRes = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      }).then((res) => res.json())
-    }
-    if (tokenRes?.token) {
-      event.data.fileToken = tokenRes.token
-    }
     const response = await fetch('/api/form', {
       method: 'POST',
-      // Convert form data to JSON string
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(event.data),
+      body: JSON.stringify(event.data)
     })
 
     if (!response?.ok) {
       throw new Error('Failed to submit form')
     }
-
     // Form submitted successfully
     toast.success('Solicitação enviada com sucesso! 😁', toastOptions)
   } catch (error) {
@@ -185,27 +159,9 @@ async function onSubmit(event: FormSubmitEvent<any>) {
     )
   } finally {
     isLoading.value = false
-    state.email = undefined
-    state.messageTitle = undefined
-    state.description = undefined
-    state.requestType = undefined
-    state.subject = undefined
-    state.fullName = undefined
-    state.cpf = undefined
-    state.phone = undefined
-    state.orderNumber = undefined
+    state.value = defaultValues
   }
 }
-
-const handleFileChange = (event: any) => {
-  const file = event.target.files[0]
-  if (!file) {
-    return
-  }
-  state.requestAttachments = file
-}
-
-
 </script>
 
 <template>
@@ -217,8 +173,9 @@ const handleFileChange = (event: any) => {
     </h1>
 
     <UForm
-      :schema="schema"
+      id="request-form"
       :state="state"
+      :schema="schema"
       class="space-y-4 mb-4"
       @submit="onSubmit"
     >
@@ -276,19 +233,6 @@ const handleFileChange = (event: any) => {
         <UInput v-model="state.orderNumber" />
       </UFormGroup>
 
-      <UFormGroup
-        label="Anexos (opcional)"
-        name="requestAttachments"
-        class="custom-label"
-      >
-        <UInput
-          @change="handleFileChange"
-          accept="image/*"
-          type="file"
-          placeholder="Adicione um arquivo"
-        />
-      </UFormGroup>
-
       <UButton
         block
         type="submit"
@@ -306,10 +250,3 @@ const handleFileChange = (event: any) => {
     <!-- <SharedRecaptchaPrivacyAndTerms class="mx-auto" /> -->
   </div>
 </template>
-
-<style lang="scss" scoped>
-// label {
-//   color: white;
-// }
-//
-</style>

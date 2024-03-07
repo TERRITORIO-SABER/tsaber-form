@@ -2,17 +2,17 @@
 export default defineNuxtConfig({
   css: ['@/assets/css/main.scss', 'vue-toastification/dist/index.css'],
   devtools: { enabled: true },
-  modules: ['@nuxt/ui'],
-  plugins: [
-    "@/plugins/mask"
+  modules: [
+    '@nuxt/ui'
   ],
+  plugins: ['@/plugins/mask', '@/plugins/recaptcha'],
   build: {
-    transpile: ['vue-toastification'],
+    transpile: ['vue-toastification']
   },
   tailwindcss: {
     exposeConfig: false,
     injectPosition: 0,
-    viewer: process.env.NODE_ENV !== 'production',
+    viewer: process.env.NODE_ENV !== 'production'
   },
   typescript: {
     shim: false
@@ -23,8 +23,12 @@ export default defineNuxtConfig({
     ZendeskUser: process.env.ZENDESK_API_USER,
     // Keys within public, will be also exposed to the client-side
     public: {
-      recaptchaSiteKey: process.env.RECAPTCHA_SITE_KEY
+      grecaptcha: {
+        hideBadge: false,
+        mode: 'base',
+        siteKey: process.env.RECAPTCHA_SITE_KEY,
+        version: 3
+      }
     }
   }
-
 })
