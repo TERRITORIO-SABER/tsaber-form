@@ -1,0 +1,35 @@
+version: 1
+
+frontend:
+  phases:
+    build:
+      commands:
+        - npm install
+        - npm run build
+
+  artifacts:
+    baseDirectory: .output/public
+    files:
+      - '**/*'
+
+  cache:
+    paths:
+      - node_modules/**/*
+
+backend:
+  phases:
+    build:
+      commands:
+        - echo "No build necessary for backend"
+
+  artifacts:
+    files:
+      - .output/server/index.mjs
+
+  cache:
+    paths:
+      - .output/server/node_modules/**/*
+
+startApi:
+  commands:
+    - node .output/server/index.mjs
