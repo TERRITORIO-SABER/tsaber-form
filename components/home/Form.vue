@@ -166,7 +166,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
 
 <template>
   <div
-    class="mx-auto max-w-2xl mb-12 px-4 pb-4 lg:px-8 bg-[#23282C] text-white"
+    
   >
     <h1 class="text-[1.5rem] text-xs-[2rem] font-bold mb-4">
       Enviar uma solicitação
