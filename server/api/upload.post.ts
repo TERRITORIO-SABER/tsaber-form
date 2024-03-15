@@ -1,14 +1,8 @@
-import axios from 'axios'
-
 export default defineEventHandler(async (event) => {
   const form = (await readMultipartFormData(event)) || []
-  const imageFile = form[0]
-  const imageName = form[1].data.toString()
-  
-  if (!imageFile) return
   const config = useRuntimeConfig()
-  const res = uploadImageToZendesk(
-    {imageFile, imageName},
+  const res = await uploadImageToZendesk(
+    form,
     config.ZendeskUser,
     config.ZendeskToken
   )
@@ -16,26 +10,23 @@ export default defineEventHandler(async (event) => {
 })
 
 const uploadImageToZendesk = async (
-  imageFile: any,
+  form: any,
   zendeskUsername: any,
   zendeskToken: any
 ) => {
-  const zendeskUrl = `https://territoriosaber.zendesk.com/api/v2/uploads.json?filename=${imageFile.imageName}` // Replace 'yoursubdomain' with your Zendesk subdomain
-
+  const zendeskUrl = `https://territoriosaber.zendesk.com/api/v2/uploads.json?filename=${form[0].filename}`
   try {
-    
-    const res = await axios({
+    const res = await fetch(zendeskUrl, {
       method: 'POST',
-      url: zendeskUrl,
-      data: imageFile.imageFile,
+      body: form[0].data,
       headers: {
-        'Content-Type': 'application/binary',
-        Authorization: 'Basic ' + btoa(zendeskUsername + ':' + zendeskToken)
+        Authorization: 'Basic ' + btoa(zendeskUsername + ':' + zendeskToken),
+        'Content-Type': 'image/png'
       }
     })
-    console.log('attachment res', res.data)
-    
-    return { token: res.data.upload.token }
+    const data = await res.json()
+    console.log('Upload successful', data.upload.attachment.url)
+    return { token: data.upload.token as string }
   } catch (error) {
     console.log(error)
     throw error

@@ -56,6 +56,13 @@ yarn build
 bun run build
 ```
 
+Run production build
+
+```
+node .output/server/index.mjs
+```
+
+
 Locally preview production build:
 
 ```bash

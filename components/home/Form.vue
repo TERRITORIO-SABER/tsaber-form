@@ -33,7 +33,7 @@ const subjectOptions = [
 
 const schema = Joi.object({
   email: Joi.string()
-    .email({ tlds: { allow: false } }) // Validates email format
+    .email({ tlds: { allow: false } })
     .required()
     .custom((value, helpers) => {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
@@ -88,7 +88,6 @@ const schema = Joi.object({
       function allEqual(input: string) {
         return input.split('').every((char) => char === input[0])
       }
-      // Check if all values in the string are the same
       const numericValue = value.replace(/\D/g, '')
       if (allEqual(numericValue)) {
         return helpers.message({
@@ -103,14 +102,18 @@ const schema = Joi.object({
   orderNumber: Joi.string()
     .allow('', null)
     .custom((value, helpers) => {
+      // Check if the value contains only numbers
       if (value && !/^\d+$/.test(value)) {
-        // Check if the value contains only numbers
         return helpers.message({
           custom: 'O número do pedido deve conter apenas números'
         })
       }
       return value
-    }, 'Order Number Validation')
+    }, 'Order Number Validation'),
+  requestAttachments: Joi.object({
+    name: Joi.string(),
+    file: Joi.any()
+  })
 })
 
 const defaultValues = {
@@ -122,13 +125,32 @@ const defaultValues = {
   fullName: null,
   cpf: null,
   phone: null,
-  orderNumber: null
+  orderNumber: null,
+  requestAttachments: {
+    name: '',
+    file: null
+  }
 }
 const state = ref({
   ...defaultValues
 })
 
 let isLoading = ref(false)
+let fileInput = ref()
+
+const selectedFileChanged = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (input?.files?.length === 0) {
+    console.log('No file selected.')
+    return
+  }
+  const file = input?.files?.[0] as File
+  const localFile = await fetch(URL.createObjectURL(file))
+  const blob = await localFile.blob()
+
+  state.value.requestAttachments.file = blob as any
+  state.value.requestAttachments.name = file?.name || ''
+}
 
 async function onSubmit(event: FormSubmitEvent<any>) {
   isLoading.value = true
@@ -138,6 +160,20 @@ async function onSubmit(event: FormSubmitEvent<any>) {
     const token = await $recaptcha.execute('login')
     if (!token) throw new Error('Recaptcha failed')
 
+    const { file, name } = state.value.requestAttachments
+    if (file) {
+      const formData = new FormData()
+      formData.append('file', file, name)
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      }).then((result) => result.json())
+
+      if (res.token) {
+        event.data.fileToken = res.token
+        event.data.fileName = state.value.requestAttachments.name
+      }
+    }
     const response = await fetch('/api/form', {
       method: 'POST',
       headers: {
@@ -149,7 +185,6 @@ async function onSubmit(event: FormSubmitEvent<any>) {
     if (!response?.ok) {
       throw new Error('Failed to submit form')
     }
-    // Form submitted successfully
     toast.success('Solicitação enviada com sucesso! 😁', toastOptions)
   } catch (error) {
     console.error('Error submitting form:', error)
@@ -160,22 +195,21 @@ async function onSubmit(event: FormSubmitEvent<any>) {
   } finally {
     isLoading.value = false
     state.value = defaultValues
+    fileInput.value = null
   }
 }
 </script>
 
 <template>
-  <div
-    
-  >
+  <div>
     <h1 class="text-[1.5rem] text-xs-[2rem] font-bold mb-4">
       Enviar uma solicitação
     </h1>
 
     <UForm
       id="request-form"
-      :state="state"
       :schema="schema"
+      :state="state"
       class="space-y-4 mb-4"
       @submit="onSubmit"
     >
@@ -233,6 +267,40 @@ async function onSubmit(event: FormSubmitEvent<any>) {
         <UInput v-model="state.orderNumber" />
       </UFormGroup>
 
+      <UFormGroup
+        label="Anexos (opcional)"
+        name="requestAttachments"
+        class="custom-label"
+      >
+        <div class="flex items-center justify-center w-full">
+          <label
+            for="dropzone-file"
+            class="flex flex-col items-center justify-center w-full border-2 border-primary border rounded-lg cursor-pointer hover:bg-bray-800 bg-gray-700 hover:border-purple-500 hover:bg-gray-600"
+          >
+            <div class="flex flex-col items-center justify-center py-3">
+              <p class="text-md text-white">
+                <span v-if="!fileInput" class="font-semibold"
+                  >Clique para anexar um arquivo
+                </span>
+                <span v-else class="font-semibold">{{
+                  state.requestAttachments.name
+                }}</span>
+              </p>
+            </div>
+            <UInput
+              @change="selectedFileChanged"
+              accept="image/*"
+              type="file"
+              placeholder="Adicione um arquivo"
+              id="dropzone-file"
+              class="hidden"
+              v-model="fileInput"
+            />
+          </label>
+        </div>
+        <small class="text-sm text-gray-300">Somente imagens Ex: .png, .jpg</small>
+      </UFormGroup>
+
       <UButton
         block
         type="submit"
@@ -246,7 +314,5 @@ async function onSubmit(event: FormSubmitEvent<any>) {
         {{ isLoading ? '' : 'Enviar' }}
       </UButton>
     </UForm>
-
-    <!-- <SharedRecaptchaPrivacyAndTerms class="mx-auto" /> -->
   </div>
 </template>

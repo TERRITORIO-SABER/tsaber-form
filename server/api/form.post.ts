@@ -1,32 +1,4 @@
-type FormData = {
-  email: string
-  messageTitle: string
-  description: string
-  requestType: string
-  subject: string
-  fullName: string
-  cpf: string
-  phone: string
-  orderNumber?: string
-}
-
-type TicketData = {
-  ticket_form_id: string
-  subject: string
-  description: string
-  requester: {
-    email: string
-    name: string
-  }
-  custom_fields: {
-    id: string
-    value: string
-  }[]
-  comment?: {
-    body: string
-    uploads: string[]
-  }
-}
+import { FormData, TicketData } from './type'
 
 export default defineEventHandler(async (event) => {
   const body: FormData = await readBody(event)
@@ -53,6 +25,11 @@ export default defineEventHandler(async (event) => {
       value: body.orderNumber
     })
 
+  body.fileToken &&
+    (ticketData.comment = {
+      body: body.description,
+      uploads: [body.fileToken]
+    })  
   const config = useRuntimeConfig()
   const res = await createZendeskTicket(
     ticketData,
@@ -83,7 +60,6 @@ const createZendeskTicket = async (
       const errorMessage = await response.text()
       throw new Error(`Failed to create Zendesk ticket: ${errorMessage}`)
     }
-
     const responseData = await response.json()
     console.log('Zendesk ticket created successfully:', responseData)
     return responseData // Return the created ticket data
