@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import Joi from 'joi'
-import type { FormSubmitEvent } from '#ui/types'
-import { cpf } from 'cpf-cnpj-validator'
+import type { FormSubmitEvent, FormErrorEvent } from '#ui/types'
 import { POSITION, useToast } from 'vue-toastification'
 import { CommonOptions } from 'vue-toastification/dist/types/types'
+import { agentFormSchema } from '@/components/shared/schemas'
 
 const toast = useToast()
 const toastOptions: CommonOptions = {
@@ -31,103 +30,32 @@ const subjectOptions = [
   }
 ]
 
-const schema = Joi.object({
-  email: Joi.string()
-    .email({ tlds: { allow: false } })
-    .required()
-    .custom((value, helpers) => {
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        return helpers.message({ custom: 'Digite um Email válido' })
-      }
-      return value
-    }, 'Email Validation')
-    .messages({
-      'any.required': `E-mail não pode ficar em branco`,
-      '*': 'Digite um e-mail válido'
-    }),
-  messageTitle: Joi.string().required().messages({
-    '*': `Título da mensagem não pode ficar em branco`
-  }),
-  description: Joi.string().required().messages({
-    '*': `Descrição não pode ficar em branco`
-  }),
-  requestType: Joi.string()
-    .default(null)
-    .valid('duvida', 'problema', 'outros')
-    .required()
-    .messages({
-      '*': `Escolha uma opção`
-    }),
-  subject: Joi.string().required().messages({
-    '*': `Escolha uma opção`
-  }),
-  fullName: Joi.string().required().messages({
-    '*': `Nome completo não pode ficar em branco`
-  }),
-  cpf: Joi.string()
-    .required()
-    .custom((value, helpers) => {
-      if (!cpf.isValid(value)) {
-        return helpers.message({ custom: 'CPF inválido' })
-      }
-      return value
-    }, 'CPF Validation')
-    .messages({
-      '*': 'CPF inválido'
-    }),
-  phone: Joi.string()
-    .required()
-    .custom((value, helpers) => {
-      // Check if the numericValue matches the expected format
-      if (!/^\(\d{2}\) \d{5}-\d{4}$/.test(value)) {
-        return helpers.message({
-          custom: 'O telefone deve seguir o formato (##) #####-####'
-        })
-      }
-      // Check if all values in the string are the same
-      function allEqual(input: string) {
-        return input.split('').every((char) => char === input[0])
-      }
-      const numericValue = value.replace(/\D/g, '')
-      if (allEqual(numericValue)) {
-        return helpers.message({
-          custom: 'Insira um telefone válido'
-        })
-      }
-      return value
-    }, 'Phone Validation')
-    .messages({
-      '*': `Insira um telefone válido`
-    }),
-  orderNumber: Joi.string()
-    .allow('', null)
-    .custom((value, helpers) => {
-      // Check if the value contains only numbers
-      if (value && !/^\d+$/.test(value)) {
-        return helpers.message({
-          custom: 'O número do pedido deve conter apenas números'
-        })
-      }
-      return value
-    }, 'Order Number Validation'),
-  requestAttachments: Joi.object({
-    name: Joi.string(),
-    file: Joi.any()
-  })
-})
+const formId = useAttrs()['form-id'] as string
 
-const defaultValues = {
+interface DefaultValues {
+  formId: string | null
+  email: string | null
+  messageTitle: string | null
+  description: string | null
+  requestType: string | null
+  subject: string | null
+  fullName: string | null
+  requestAttachments: {
+    name: string | null
+    file: Blob | null
+  }
+}
+
+const defaultValues: DefaultValues = {
+  formId,
   email: null,
   messageTitle: null,
   description: null,
   requestType: null,
   subject: null,
   fullName: null,
-  cpf: null,
-  phone: null,
-  orderNumber: null,
   requestAttachments: {
-    name: '',
+    name: null,
     file: null
   }
 }
@@ -148,20 +76,19 @@ const selectedFileChanged = async (event: Event) => {
   const localFile = await fetch(URL.createObjectURL(file))
   const blob = await localFile.blob()
 
-  state.value.requestAttachments.file = blob as any
-  state.value.requestAttachments.name = file?.name || ''
+  state.value.requestAttachments.file = blob
+  state.value.requestAttachments.name = file.name
 }
 
 async function onSubmit(event: FormSubmitEvent<any>) {
   isLoading.value = true
   try {
     const { $recaptcha } = useNuxtApp()
-    // @ts-ignore
-    const token = await $recaptcha.execute('login')
+    const token = await $recaptcha.execute('submitAgentForm')
     if (!token) throw new Error('Recaptcha failed')
 
     const { file, name } = state.value.requestAttachments
-    if (file) {
+    if (file && name) {
       const formData = new FormData()
       formData.append('file', file, name)
       const res = await fetch('/api/upload', {
@@ -182,7 +109,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
       body: JSON.stringify(event.data)
     })
 
-    if (!response?.ok) {
+    if (!response.ok) {
       throw new Error('Failed to submit form')
     }
     toast.success('Solicitação enviada com sucesso! 😁', toastOptions)
@@ -205,16 +132,19 @@ async function onSubmit(event: FormSubmitEvent<any>) {
     <h1 class="text-[1.5rem] text-xs-[2rem] font-bold mb-4">
       Enviar uma solicitação
     </h1>
-
     <UForm
-      id="request-form"
-      :schema="schema"
+      id="request-form-agent"
       :state="state"
+      :schema="agentFormSchema"
       class="space-y-4 mb-4"
       @submit="onSubmit"
     >
       <UFormGroup label="Endereço de e-mail *" name="email">
         <UInput v-model="state.email" placeholder="exemplo@example.com" />
+      </UFormGroup>
+
+      <UFormGroup label="Nome completo *" name="fullName">
+        <UInput v-model="state.fullName" />
       </UFormGroup>
 
       <UFormGroup label="Título da mensagem *" name="messageTitle">
@@ -243,39 +173,14 @@ async function onSubmit(event: FormSubmitEvent<any>) {
         />
       </UFormGroup>
 
-      <UFormGroup label="Nome completo *" name="fullName">
-        <UInput v-model="state.fullName" />
-      </UFormGroup>
-
-      <UFormGroup label="CPF *" name="cpf">
-        <UInput
-          v-model="state.cpf"
-          v-mask="'###.###.###-##'"
-          placeholder="000.000.000-00"
-        />
-      </UFormGroup>
-
-      <UFormGroup label="Telefone *" name="phone">
-        <UInput
-          v-model="state.phone"
-          v-mask="'(##) #####-####'"
-          placeholder="(00) 00000-0000"
-        />
-      </UFormGroup>
-
-      <UFormGroup label="Número do pedido (se existir)" name="orderNumber">
-        <UInput v-model="state.orderNumber" />
-      </UFormGroup>
-
-      <UFormGroup
-        label="Anexos (opcional)"
-        name="requestAttachments"
-        class="custom-label"
-      >
+      <!-- label="Anexos (opcional)" -->
+      <UFormGroup name="requestAttachments" class="custom-label">
+        <div class="text-gray-200 text-[13px] font-normal">
+          Anexos (opcional)
+        </div>
         <div class="flex items-center justify-center w-full">
           <label
-            for="dropzone-file"
-            class="flex flex-col items-center justify-center w-full border-2 border-primary border rounded-lg cursor-pointer hover:bg-bray-800 bg-gray-700 hover:border-purple-500 hover:bg-gray-600"
+            class="flex flex-col items-center justify-center w-full border-2 border-primary rounded-lg cursor-pointer hover:bg-bray-800 bg-gray-700 hover:border-purple-500 hover:bg-gray-600"
           >
             <div class="flex flex-col items-center justify-center py-3">
               <p class="text-md text-white">
@@ -298,8 +203,18 @@ async function onSubmit(event: FormSubmitEvent<any>) {
             />
           </label>
         </div>
-        <small class="text-sm text-gray-300">Somente imagens Ex: .png, .jpg</small>
+        <small class="text-sm text-gray-300"
+          >Somente imagens Ex: .png, .jpg</small
+        >
       </UFormGroup>
+
+      <input
+        id="form-id"
+        v-model="state.formId"
+        hidden="true"
+        aria-hidden="true"
+        inputClass="hidden"
+      />
 
       <UButton
         block

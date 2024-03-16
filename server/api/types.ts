@@ -1,18 +1,24 @@
-export type FormData = {
+export enum FormsID {
+  UserForm = '22711355970587',
+  AgentForm = '222739681924507'
+}
+
+export interface FormData {
+  formId: FormsID
   email: string
   messageTitle: string
   description: string
   requestType: string
   subject: string
   fullName: string
-  cpf: string
-  phone: string
-  orderNumber?: string,
-  fileToken?: string,
+  cpf?: string
+  phone?: string
+  orderNumber?: string
+  fileToken?: string
   fileName?: string
 }
 
-export type TicketData = {
+export interface TicketData {
   ticket_form_id: string
   subject: string
   description: string
