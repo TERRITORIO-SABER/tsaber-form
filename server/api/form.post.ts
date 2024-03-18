@@ -1,5 +1,16 @@
 import { FormData, TicketData, FormsID } from './types'
 
+const fieldsId = {
+  cpf: '23142561504795',
+  phone: '23142638169883',
+  orderNumber: '23142687375259',
+  messageTitle: '23142701419931',
+  fullName: '23018418373275',
+  requestType: '23139054906779',
+  userSubject: '23142330836891',
+  agentSubject: '23930834655515'
+}
+
 export default defineEventHandler(async (event) => {
   const body: FormData = await readBody(event)
   if (body.formId === FormsID.UserForm && (!body.cpf || !body.phone)) {
@@ -12,28 +23,28 @@ export default defineEventHandler(async (event) => {
     requester: { email: body.email, name: body.fullName },
     // Add any other necessary fields here
     custom_fields: [
-      { id: '23142701419931', value: body.messageTitle },
-      { id: '23018418373275', value: body.fullName },
-      { id: '23139054906779', value: body.requestType },
-      { id: '23142330836891', value: body.subject }
+      { id: fieldsId.messageTitle, value: body.messageTitle },
+      { id: fieldsId.fullName, value: body.fullName },
+      { id: fieldsId.requestType, value: body.requestType },
+      { id: body.formId === FormsID.UserForm ? fieldsId.userSubject : fieldsId.agentSubject, value: body.subject }
     ]
   }
 
   body.cpf &&
     ticketData.custom_fields.push({
-      id: '23142561504795',
+      id: fieldsId.cpf,
       value: body.cpf
     })
 
   body.phone &&
     ticketData.custom_fields.push({
-      id: '23142638169883',
+      id: fieldsId.phone,
       value: body.phone
     })
 
   body.orderNumber &&
     ticketData.custom_fields.push({
-      id: '23142687375259',
+      id: fieldsId.orderNumber,
       value: body.orderNumber
     })
 
@@ -43,11 +54,11 @@ export default defineEventHandler(async (event) => {
       uploads: [body.fileToken]
     })
 
-  const config = useRuntimeConfig()
+  const { ZendeskToken, ZendeskUser} = useRuntimeConfig()
   const res = await createZendeskTicket(
     ticketData,
-    config.ZendeskUser,
-    config.ZendeskToken
+    ZendeskUser,
+    ZendeskToken
   )
   return res
 })

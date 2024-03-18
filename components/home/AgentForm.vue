@@ -26,7 +26,11 @@ const requestTypeOptions = [
 const subjectOptions = [
   {
     name: 'Suporte Técnico',
-    value: 'suporte_tecnico'
+    value: 'suporte_tecnico_interno'
+  },
+  {
+    name: 'Solicitação de Negócio',
+    value: 'solicitacao_de_negocio'
   }
 ]
 
@@ -130,7 +134,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
 <template>
   <div>
     <h1 class="text-[1.5rem] text-xs-[2rem] font-bold mb-4">
-      Enviar uma solicitação
+      Enviar uma requisicão para o departamento de TI
     </h1>
     <UForm
       id="request-form-agent"
