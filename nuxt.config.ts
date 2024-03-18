@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/ui'
   ],
-  plugins: ['@/plugins/mask', '@/plugins/recaptcha'],
+  plugins: [{src: '@/plugins/mask', mode: 'client'}, '@/plugins/recaptcha'],
   build: {
     transpile: ['vue-toastification']
   },
