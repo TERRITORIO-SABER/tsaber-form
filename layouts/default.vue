@@ -5,6 +5,10 @@ useHead({
     lang: 'pt-BR'
   },
   title: 'Atendimento Território Saber',
+  script: [
+        { src: 'https://cmp.osano.com/AzqVeCU7U3B0y4INa/4f547600-43d4-4c5a-b159-4fc3bf65b5c4/osano.js', defer: true }
+      ]
+
 })
 
 onMounted(async () => {

@@ -3,12 +3,14 @@ export default defineNuxtConfig({
   css: ['@/assets/css/main.scss', 'vue-toastification/dist/index.css'],
   devtools: { enabled: true },
   modules: [
-    '@nuxt/ui'
+    '@nuxt/ui',
   ],
-  plugins: [{src: '@/plugins/mask', mode: 'client'}, '@/plugins/recaptcha'],
+
+  plugins: [{ src: '@/plugins/mask', mode: 'client' }, '@/plugins/recaptcha'],
   build: {
-    transpile: ['vue-toastification']
+    transpile: ['vue-toastification'],
   },
+
   tailwindcss: {
     exposeConfig: false,
     injectPosition: 0,
@@ -16,6 +18,12 @@ export default defineNuxtConfig({
   },
   typescript: {
     shim: false
+  },
+  nitro: {
+    compressPublicAssets: true,
+    prerender: {
+      crawlLinks: true,
+    }
   },
   runtimeConfig: {
     // The private keys which are only available within server-side
