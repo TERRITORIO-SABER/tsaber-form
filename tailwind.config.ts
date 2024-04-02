@@ -1,4 +1,5 @@
 import { Config } from 'tailwindcss'
+import defaultTheme from 'tailwindcss/defaultTheme';
 
 export default <Config>{
   content: [
@@ -10,5 +11,14 @@ export default <Config>{
   ],
   plugins: [
     // require('@tailwindcss/forms'),
-  ]
+  ],
+  theme: {
+    extend: {
+      fontFamily: {
+        headins: ['"Bricolage Grotesque"', ...defaultTheme.fontFamily.sans],
+        body: ['"Libre Franklin"', ...defaultTheme.fontFamily.sans],
+      }
+    }
+  },
+
 }

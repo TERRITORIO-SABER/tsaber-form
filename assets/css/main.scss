@@ -1,7 +1,9 @@
 @import "variables";
+
 html {
   scroll-behavior: smooth;
   background: #16191b;
+  font-family: 'Libre Franklin', ui-sans-serif, system-ui, sans-serif;
 }
 
 input,
@@ -15,6 +17,10 @@ input[type=file] {
   padding-left: 8rem;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+}
+
 .Vue-Toastification__toast {
   &--success {
     &.top-right {
@@ -22,6 +28,7 @@ input[type=file] {
       color: $vt-text-color-success;
     }
   }
+
   &--error {
     &.top-right {
       background-color: $vt-color-error;

@@ -4,6 +4,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: [
     '@nuxt/ui',
+    '@nuxtjs/google-fonts'
   ],
 
   plugins: [{ src: '@/plugins/mask', mode: 'client' }, '@/plugins/recaptcha'],
@@ -15,6 +16,12 @@ export default defineNuxtConfig({
     exposeConfig: false,
     injectPosition: 0,
     viewer: process.env.NODE_ENV !== 'production'
+  },
+  googleFonts: {
+    families: {
+      'Bricolage Grotesque': true,
+      'Libre Franklin': true,
+    }
   },
   typescript: {
     shim: false
