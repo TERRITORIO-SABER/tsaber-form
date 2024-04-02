@@ -14,7 +14,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-2xl mb-12 px-4 pb-4 lg:px-8 bg-[#23282D] text-white">
+  <div class="mx-auto max-w-2xl mb-12 px-4 pb-4 lg:px-8  text-white">
     <slot></slot>
   </div>
 </template>
