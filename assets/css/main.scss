@@ -1,13 +1,31 @@
+@import "variables";
 html {
   scroll-behavior: smooth;
   background: #16191b;
 }
 
-input, textarea, select {
+input,
+textarea,
+select {
   background: white !important;
   color: black !important;
 }
 
 input[type=file] {
   padding-left: 8rem;
+}
+
+.Vue-Toastification__toast {
+  &--success {
+    &.top-right {
+      background-color: $vt-color-success;
+      color: $vt-text-color-success;
+    }
+  }
+  &--error {
+    &.top-right {
+      background-color: $vt-color-error;
+      color: $vt-text-color-error;
+    }
+  }
 }
