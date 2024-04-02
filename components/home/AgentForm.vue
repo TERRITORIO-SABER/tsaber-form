@@ -6,7 +6,7 @@ import { agentFormSchema } from '@/components/shared/schemas'
 
 const toast = useToast()
 const toastOptions: CommonOptions = {
-  position: POSITION.TOP_CENTER
+  position: POSITION.TOP_RIGHT
 }
 
 const requestTypeOptions = [
